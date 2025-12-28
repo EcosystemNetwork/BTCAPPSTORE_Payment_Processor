@@ -59,14 +59,10 @@ npm install
 2. Edit `.env` and add your Square credentials:
    ```env
    SQUARE_ACCESS_TOKEN=your_sandbox_access_token
+   SQUARE_APPLICATION_ID=your_square_application_id
    SQUARE_ENVIRONMENT=sandbox
    SQUARE_LOCATION_ID=your_location_id
    PORT=3000
-   ```
-
-3. Edit `public/js/app.js` and update the Square Application ID:
-   ```javascript
-   const SQUARE_APPLICATION_ID = 'your_square_application_id';
    ```
 
 ### 4. Run the Application
@@ -123,6 +119,10 @@ Square provides test card numbers for the sandbox environment:
 
 ## API Endpoints
 
+### GET `/api/config`
+Returns configuration needed by the frontend.
+- **Returns**: Square Application ID, Location ID, and configuration status
+
 ### GET `/api/products`
 Returns the list of available photo products.
 
@@ -150,20 +150,19 @@ To use this in production:
    ```env
    SQUARE_ENVIRONMENT=production
    SQUARE_ACCESS_TOKEN=your_production_access_token
+   SQUARE_APPLICATION_ID=your_production_application_id
    SQUARE_LOCATION_ID=your_production_location_id
    ```
 
-2. Update the Square Application ID in `public/js/app.js` to your production app ID
+2. Use real product images and update the product catalog in `server.js`
 
-3. Use real product images and update the product catalog in `server.js`
+3. Add proper error logging and monitoring
 
-4. Add proper error logging and monitoring
+4. Implement order storage (database)
 
-5. Implement order storage (database)
+5. Add email confirmations for orders
 
-6. Add email confirmations for orders
-
-7. Implement proper authentication if needed
+6. Implement proper authentication if needed
 
 ## Security Considerations
 

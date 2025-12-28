@@ -1,27 +1,39 @@
 // Configuration
 const API_BASE_URL = window.location.origin;
-const SQUARE_APPLICATION_ID = 'sandbox-sq0idb-YOUR_SQUARE_APP_ID'; // Replace with your Square App ID
 
 // State management
 let cart = [];
 let products = [];
 let squarePayments;
 let card;
+let config = {};
 
 // Initialize the app
 async function init() {
+    await loadConfig();
     await loadProducts();
     setupEventListeners();
     updateCartCount();
     
     // Initialize Square Payment Form
-    try {
-        if (typeof Square !== 'undefined') {
-            squarePayments = Square.payments(SQUARE_APPLICATION_ID, process.env.SQUARE_LOCATION_ID);
+    if (config.squareConfigured && typeof Square !== 'undefined') {
+        try {
+            squarePayments = Square.payments(config.squareApplicationId, config.squareLocationId);
             await initializeCard();
+        } catch (error) {
+            console.error('Error initializing Square:', error);
         }
+    }
+}
+
+// Load configuration from server
+async function loadConfig() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/config`);
+        config = await response.json();
     } catch (error) {
-        console.error('Error initializing Square:', error);
+        console.error('Error loading configuration:', error);
+        config = { squareConfigured: false };
     }
 }
 

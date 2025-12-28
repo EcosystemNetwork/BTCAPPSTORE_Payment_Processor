@@ -13,9 +13,15 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
+// Validate Square configuration
+if (!process.env.SQUARE_ACCESS_TOKEN || !process.env.SQUARE_LOCATION_ID) {
+  console.warn('⚠️  Warning: Square credentials not configured. Please set up .env file.');
+  console.warn('   Payment processing will not work without valid credentials.');
+}
+
 // Initialize Square client
 const squareClient = new Client({
-  accessToken: process.env.SQUARE_ACCESS_TOKEN,
+  accessToken: process.env.SQUARE_ACCESS_TOKEN || 'PLACEHOLDER_TOKEN',
   environment: process.env.SQUARE_ENVIRONMENT === 'production' ? Environment.Production : Environment.Sandbox,
 });
 
@@ -66,6 +72,15 @@ const products = [
 ];
 
 // API Routes
+
+// Get configuration for frontend
+app.get('/api/config', (req, res) => {
+  res.json({
+    squareApplicationId: process.env.SQUARE_APPLICATION_ID || 'sandbox-sq0idb-YOUR_SQUARE_APP_ID',
+    squareLocationId: process.env.SQUARE_LOCATION_ID || '',
+    squareConfigured: !!(process.env.SQUARE_ACCESS_TOKEN && process.env.SQUARE_LOCATION_ID),
+  });
+});
 
 // Get all products
 app.get('/api/products', (req, res) => {
@@ -161,5 +176,7 @@ app.listen(PORT, () => {
   
   if (!process.env.SQUARE_ACCESS_TOKEN || !process.env.SQUARE_LOCATION_ID) {
     console.warn('⚠️  Warning: Square credentials not configured. Please set up .env file.');
+  } else {
+    console.log('✓ Square credentials configured');
   }
 });
