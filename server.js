@@ -14,9 +14,13 @@ app.use(bodyParser.json());
 app.use(express.static('public'));
 
 // Validate Square configuration
-if (!process.env.SQUARE_ACCESS_TOKEN || !process.env.SQUARE_LOCATION_ID) {
-  console.warn('⚠️  Warning: Square credentials not configured. Please set up .env file.');
+const requiredSquareConfig = ['SQUARE_ACCESS_TOKEN', 'SQUARE_APPLICATION_ID', 'SQUARE_LOCATION_ID'];
+const missingConfig = requiredSquareConfig.filter(key => !process.env[key]);
+
+if (missingConfig.length > 0) {
+  console.warn('⚠️  Warning: Missing Square credentials:', missingConfig.join(', '));
   console.warn('   Payment processing will not work without valid credentials.');
+  console.warn('   Please configure all required values in your .env file.');
 }
 
 // Initialize Square client
@@ -75,10 +79,14 @@ const products = [
 
 // Get configuration for frontend
 app.get('/api/config', (req, res) => {
+  const isConfigured = !!(process.env.SQUARE_ACCESS_TOKEN && 
+                          process.env.SQUARE_APPLICATION_ID && 
+                          process.env.SQUARE_LOCATION_ID);
+  
   res.json({
-    squareApplicationId: process.env.SQUARE_APPLICATION_ID || 'sandbox-sq0idb-YOUR_SQUARE_APP_ID',
+    squareApplicationId: process.env.SQUARE_APPLICATION_ID || '',
     squareLocationId: process.env.SQUARE_LOCATION_ID || '',
-    squareConfigured: !!(process.env.SQUARE_ACCESS_TOKEN && process.env.SQUARE_LOCATION_ID),
+    squareConfigured: isConfigured,
   });
 });
 
@@ -103,6 +111,11 @@ app.post('/api/payment', async (req, res) => {
 
   if (!sourceId || !amount) {
     return res.status(400).json({ error: 'Missing required payment information' });
+  }
+
+  // Validate amount is a positive integer
+  if (!Number.isInteger(amount) || amount <= 0) {
+    return res.status(400).json({ error: 'Invalid amount: must be a positive integer in cents' });
   }
 
   try {
@@ -174,8 +187,11 @@ app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log(`Square environment: ${process.env.SQUARE_ENVIRONMENT || 'sandbox'}`);
   
-  if (!process.env.SQUARE_ACCESS_TOKEN || !process.env.SQUARE_LOCATION_ID) {
-    console.warn('⚠️  Warning: Square credentials not configured. Please set up .env file.');
+  const requiredSquareConfig = ['SQUARE_ACCESS_TOKEN', 'SQUARE_APPLICATION_ID', 'SQUARE_LOCATION_ID'];
+  const missingConfig = requiredSquareConfig.filter(key => !process.env[key]);
+  
+  if (missingConfig.length > 0) {
+    console.warn('⚠️  Warning: Missing Square credentials:', missingConfig.join(', '));
   } else {
     console.log('✓ Square credentials configured');
   }

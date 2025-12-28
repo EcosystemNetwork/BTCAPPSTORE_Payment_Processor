@@ -18,6 +18,11 @@ async function init() {
     // Initialize Square Payment Form
     if (config.squareConfigured && typeof Square !== 'undefined') {
         try {
+            if (!config.squareApplicationId || !config.squareLocationId) {
+                console.error('Square configuration incomplete');
+                showError('Payment system is not properly configured. Please contact support.');
+                return;
+            }
             squarePayments = Square.payments(config.squareApplicationId, config.squareLocationId);
             await initializeCard();
         } catch (error) {
@@ -223,6 +228,13 @@ async function processPayment(event) {
     
     if (!customerEmail) {
         showError('Please enter your email address');
+        return;
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(customerEmail)) {
+        showError('Please enter a valid email address');
         return;
     }
     
