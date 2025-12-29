@@ -140,13 +140,18 @@ app.post('/api/payment', async (req, res) => {
       note: `Photo Store Order: ${orderId || 'N/A'}`,
     });
 
+    // Validate response structure
+    if (!result || !result.payment) {
+      throw new Error('Invalid payment response from Square');
+    }
+
     res.json({
       success: true,
       payment: {
         id: result.payment.id,
         status: result.payment.status,
-        amount: result.payment.amountMoney.amount.toString(),
-        currency: result.payment.amountMoney.currency,
+        amount: result.payment.amountMoney?.amount?.toString() || amount.toString(),
+        currency: result.payment.amountMoney?.currency || currency,
         receiptUrl: result.payment.receiptUrl,
       },
     });

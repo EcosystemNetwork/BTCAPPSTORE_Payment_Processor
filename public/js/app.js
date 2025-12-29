@@ -207,8 +207,18 @@ function showSuccess(orderId, receiptUrl) {
     document.getElementById('successOrderId').textContent = orderId;
     
     if (receiptUrl) {
-        document.getElementById('receiptLink').innerHTML = 
-            `<a href="${receiptUrl}" target="_blank">View Receipt</a>`;
+        // Validate URL is from Square
+        try {
+            const url = new URL(receiptUrl);
+            if (url.hostname.endsWith('squareup.com') || url.hostname.endsWith('squareupsandbox.com')) {
+                document.getElementById('receiptLink').innerHTML = 
+                    `<a href="${receiptUrl}" target="_blank" rel="noopener noreferrer">View Receipt</a>`;
+            } else {
+                console.warn('Receipt URL from unexpected domain:', url.hostname);
+            }
+        } catch (error) {
+            console.error('Invalid receipt URL:', error);
+        }
     }
     
     document.getElementById('successSection').classList.remove('hidden');
