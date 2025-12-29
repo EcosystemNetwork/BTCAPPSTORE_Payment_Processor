@@ -217,10 +217,18 @@ function showSuccess(orderId, receiptUrl) {
     document.getElementById('successOrderId').textContent = orderId;
     
     if (receiptUrl) {
-        // Validate URL is from Square
+        // Validate URL is from Square - use strict hostname matching
         try {
             const url = new URL(receiptUrl);
-            if (url.hostname.endsWith('squareup.com') || url.hostname.endsWith('squareupsandbox.com')) {
+            const hostname = url.hostname.toLowerCase();
+            // Check if hostname is exactly squareup.com/squareupsandbox.com or a subdomain
+            const isValidSquareDomain = 
+                hostname === 'squareup.com' || 
+                hostname === 'squareupsandbox.com' ||
+                hostname.endsWith('.squareup.com') || 
+                hostname.endsWith('.squareupsandbox.com');
+            
+            if (isValidSquareDomain && (url.protocol === 'https:' || url.protocol === 'http:')) {
                 document.getElementById('receiptLink').innerHTML = 
                     `<a href="${receiptUrl}" target="_blank" rel="noopener noreferrer">View Receipt</a>`;
             } else {
