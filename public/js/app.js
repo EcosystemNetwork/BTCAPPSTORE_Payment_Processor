@@ -7,9 +7,18 @@ let products = [];
 let squarePayments;
 let card;
 let config = {};
+let cardInitAttempts = 0;
+const MAX_CARD_INIT_ATTEMPTS = 3;
 
 // Initialize the app
 async function init() {
+    // Check if Square SDK loaded
+    if (typeof Square === 'undefined') {
+        console.error('Square SDK failed to load');
+        showError('Payment system is currently unavailable. Please try again later.');
+        return;
+    }
+    
     await loadConfig();
     await loadProducts();
     setupEventListeners();
@@ -179,9 +188,27 @@ async function showCheckout() {
     
     document.getElementById('checkoutSection').classList.remove('hidden');
     
-    // Reinitialize card if needed
+    // Initialize card only if not already initialized
     if (squarePayments && !card) {
-        await initializeCard();
+        if (cardInitAttempts < MAX_CARD_INIT_ATTEMPTS) {
+            await initializeCard();
+        } else {
+            showError('Unable to initialize payment form. Please refresh the page and try again.');
+        }
+    } else if (card) {
+        // Card already exists, just make sure it's attached
+        try {
+            await card.attach('#card-container');
+        } catch (error) {
+            // If attach fails, try to reinitialize once
+            console.error('Error reattaching card:', error);
+            if (cardInitAttempts < MAX_CARD_INIT_ATTEMPTS) {
+                card = null;
+                await initializeCard();
+            } else {
+                showError('Unable to initialize payment form. Please refresh the page and try again.');
+            }
+        }
     }
 }
 
@@ -190,8 +217,26 @@ function showSuccess(orderId, receiptUrl) {
     document.getElementById('successOrderId').textContent = orderId;
     
     if (receiptUrl) {
-        document.getElementById('receiptLink').innerHTML = 
-            `<a href="${receiptUrl}" target="_blank">View Receipt</a>`;
+        // Validate URL is from Square - use strict hostname matching
+        try {
+            const url = new URL(receiptUrl);
+            const hostname = url.hostname.toLowerCase();
+            // Check if hostname is exactly squareup.com/squareupsandbox.com or a subdomain
+            const isValidSquareDomain = 
+                hostname === 'squareup.com' || 
+                hostname === 'squareupsandbox.com' ||
+                hostname.endsWith('.squareup.com') || 
+                hostname.endsWith('.squareupsandbox.com');
+            
+            if (isValidSquareDomain && (url.protocol === 'https:' || url.protocol === 'http:')) {
+                document.getElementById('receiptLink').innerHTML = 
+                    `<a href="${receiptUrl}" target="_blank" rel="noopener noreferrer">View Receipt</a>`;
+            } else {
+                console.warn('Receipt URL from unexpected domain:', url.hostname);
+            }
+        } catch (error) {
+            console.error('Invalid receipt URL:', error);
+        }
     }
     
     document.getElementById('successSection').classList.remove('hidden');
@@ -211,6 +256,7 @@ function hideAllSections() {
 // Square Payment initialization
 async function initializeCard() {
     try {
+        cardInitAttempts++;
         card = await squarePayments.card();
         await card.attach('#card-container');
     } catch (error) {
@@ -325,19 +371,31 @@ function showNotification(message) {
 }
 
 function showError(message) {
-    const sections = ['cartSection', 'checkoutSection'];
+    // Find the currently visible section
+    const sections = ['productsSection', 'cartSection', 'checkoutSection', 'successSection'];
+    let visibleSection = null;
+    
     sections.forEach(sectionId => {
         const section = document.getElementById(sectionId);
-        if (!section.classList.contains('hidden')) {
-            const existing = section.querySelector('.error');
-            if (existing) existing.remove();
-            
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error';
-            errorDiv.textContent = message;
-            section.insertBefore(errorDiv, section.firstChild);
+        if (section && !section.classList.contains('hidden')) {
+            visibleSection = section;
         }
     });
+    
+    if (visibleSection) {
+        // Remove existing error messages in the section
+        const existing = visibleSection.querySelector('.error');
+        if (existing) existing.remove();
+        
+        // Add new error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error';
+        errorDiv.textContent = message;
+        visibleSection.insertBefore(errorDiv, visibleSection.firstChild);
+    } else {
+        // Fallback: show alert if no section is visible
+        alert(message);
+    }
 }
 
 // Add some basic animations
