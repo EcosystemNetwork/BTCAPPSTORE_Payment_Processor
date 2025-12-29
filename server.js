@@ -145,6 +145,11 @@ app.post('/api/payment', async (req, res) => {
       throw new Error('Invalid payment response from Square');
     }
 
+    // Log warning if payment response is missing expected fields
+    if (!result.payment.amountMoney) {
+      console.warn('Payment response missing amountMoney field, using request values');
+    }
+
     res.json({
       success: true,
       payment: {
