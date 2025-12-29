@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const { Client, Environment } = require('square');
+const { SquareClient, SquareEnvironment } = require('square');
 const { randomUUID } = require('crypto');
 
 const app = express();
@@ -24,9 +24,9 @@ if (missingConfig.length > 0) {
 }
 
 // Initialize Square client
-const squareClient = new Client({
+const squareClient = new SquareClient({
   accessToken: process.env.SQUARE_ACCESS_TOKEN || 'PLACEHOLDER_TOKEN',
-  environment: process.env.SQUARE_ENVIRONMENT === 'production' ? Environment.Production : Environment.Sandbox,
+  environment: process.env.SQUARE_ENVIRONMENT === 'production' ? SquareEnvironment.Production : SquareEnvironment.Sandbox,
 });
 
 // Photo products catalog
@@ -118,6 +118,16 @@ app.post('/api/payment', async (req, res) => {
     return res.status(400).json({ error: 'Invalid amount: must be a positive integer in cents' });
   }
 
+  // Validate currency is a valid 3-letter code
+  if (!/^[A-Z]{3}$/.test(currency)) {
+    return res.status(400).json({ error: 'Invalid currency: must be a 3-letter code (e.g., USD)' });
+  }
+
+  // Validate Square credentials are configured
+  if (!process.env.SQUARE_LOCATION_ID) {
+    return res.status(500).json({ error: 'Square payment system is not configured' });
+  }
+
   try {
     const { result } = await squareClient.paymentsApi.createPayment({
       sourceId,
@@ -157,6 +167,28 @@ app.post('/api/orders', async (req, res) => {
     return res.status(400).json({ error: 'No items in order' });
   }
 
+  // Validate items structure
+  for (const item of items) {
+    if (!item.id || !item.quantity) {
+      return res.status(400).json({ error: 'Invalid item structure: id and quantity required' });
+    }
+    if (!Number.isInteger(item.quantity) || item.quantity <= 0) {
+      return res.status(400).json({ error: 'Invalid quantity: must be a positive integer' });
+    }
+    const product = products.find(p => p.id === item.id);
+    if (!product) {
+      return res.status(400).json({ error: `Product not found: ${item.id}` });
+    }
+  }
+
+  // Validate email if provided
+  if (customerEmail) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(customerEmail)) {
+      return res.status(400).json({ error: 'Invalid email address format' });
+    }
+  }
+
   // Calculate total
   const total = items.reduce((sum, item) => {
     const product = products.find(p => p.id === item.id);
@@ -187,9 +219,6 @@ if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
     console.log(`Square environment: ${process.env.SQUARE_ENVIRONMENT || 'sandbox'}`);
-    
-    const requiredSquareConfig = ['SQUARE_ACCESS_TOKEN', 'SQUARE_APPLICATION_ID', 'SQUARE_LOCATION_ID'];
-    const missingConfig = requiredSquareConfig.filter(key => !process.env[key]);
     
     if (missingConfig.length > 0) {
       console.warn('⚠️  Warning: Missing Square credentials:', missingConfig.join(', '));

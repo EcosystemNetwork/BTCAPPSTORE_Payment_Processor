@@ -10,6 +10,13 @@ let config = {};
 
 // Initialize the app
 async function init() {
+    // Check if Square SDK loaded
+    if (typeof Square === 'undefined') {
+        console.error('Square SDK failed to load');
+        showError('Payment system is currently unavailable. Please try again later.');
+        return;
+    }
+    
     await loadConfig();
     await loadProducts();
     setupEventListeners();
@@ -179,9 +186,19 @@ async function showCheckout() {
     
     document.getElementById('checkoutSection').classList.remove('hidden');
     
-    // Reinitialize card if needed
+    // Initialize card only if not already initialized
     if (squarePayments && !card) {
         await initializeCard();
+    } else if (card) {
+        // Card already exists, just make sure it's attached
+        try {
+            await card.attach('#card-container');
+        } catch (error) {
+            // If attach fails, try to reinitialize
+            console.error('Error reattaching card:', error);
+            card = null;
+            await initializeCard();
+        }
     }
 }
 
@@ -325,19 +342,31 @@ function showNotification(message) {
 }
 
 function showError(message) {
-    const sections = ['cartSection', 'checkoutSection'];
+    // Find the currently visible section
+    const sections = ['productsSection', 'cartSection', 'checkoutSection', 'successSection'];
+    let visibleSection = null;
+    
     sections.forEach(sectionId => {
         const section = document.getElementById(sectionId);
-        if (!section.classList.contains('hidden')) {
-            const existing = section.querySelector('.error');
-            if (existing) existing.remove();
-            
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error';
-            errorDiv.textContent = message;
-            section.insertBefore(errorDiv, section.firstChild);
+        if (section && !section.classList.contains('hidden')) {
+            visibleSection = section;
         }
     });
+    
+    if (visibleSection) {
+        // Remove existing error messages in the section
+        const existing = visibleSection.querySelector('.error');
+        if (existing) existing.remove();
+        
+        // Add new error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error';
+        errorDiv.textContent = message;
+        visibleSection.insertBefore(errorDiv, visibleSection.firstChild);
+    } else {
+        // Fallback: show alert if no section is visible
+        alert(message);
+    }
 }
 
 // Add some basic animations
