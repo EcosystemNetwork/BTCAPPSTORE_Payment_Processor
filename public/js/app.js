@@ -7,6 +7,8 @@ let products = [];
 let squarePayments;
 let card;
 let config = {};
+let cardInitAttempts = 0;
+const MAX_CARD_INIT_ATTEMPTS = 3;
 
 // Initialize the app
 async function init() {
@@ -188,16 +190,24 @@ async function showCheckout() {
     
     // Initialize card only if not already initialized
     if (squarePayments && !card) {
-        await initializeCard();
+        if (cardInitAttempts < MAX_CARD_INIT_ATTEMPTS) {
+            await initializeCard();
+        } else {
+            showError('Unable to initialize payment form. Please refresh the page and try again.');
+        }
     } else if (card) {
         // Card already exists, just make sure it's attached
         try {
             await card.attach('#card-container');
         } catch (error) {
-            // If attach fails, try to reinitialize
+            // If attach fails, try to reinitialize once
             console.error('Error reattaching card:', error);
-            card = null;
-            await initializeCard();
+            if (cardInitAttempts < MAX_CARD_INIT_ATTEMPTS) {
+                card = null;
+                await initializeCard();
+            } else {
+                showError('Unable to initialize payment form. Please refresh the page and try again.');
+            }
         }
     }
 }
@@ -238,6 +248,7 @@ function hideAllSections() {
 // Square Payment initialization
 async function initializeCard() {
     try {
+        cardInitAttempts++;
         card = await squarePayments.card();
         await card.attach('#card-container');
     } catch (error) {

@@ -187,9 +187,11 @@ app.post('/api/orders', async (req, res) => {
   }
 
   // Validate email if provided
+  // Using a reasonable email validation regex that handles most common cases
+  // For production, consider using a dedicated email validation library
   if (customerEmail) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(customerEmail)) {
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    if (!emailRegex.test(customerEmail) || customerEmail.length > 254) {
       return res.status(400).json({ error: 'Invalid email address format' });
     }
   }
