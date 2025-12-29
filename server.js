@@ -182,17 +182,22 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Square environment: ${process.env.SQUARE_ENVIRONMENT || 'sandbox'}`);
-  
-  const requiredSquareConfig = ['SQUARE_ACCESS_TOKEN', 'SQUARE_APPLICATION_ID', 'SQUARE_LOCATION_ID'];
-  const missingConfig = requiredSquareConfig.filter(key => !process.env[key]);
-  
-  if (missingConfig.length > 0) {
-    console.warn('⚠️  Warning: Missing Square credentials:', missingConfig.join(', '));
-  } else {
-    console.log('✓ Square credentials configured');
-  }
-});
+// Start server (for local development)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Square environment: ${process.env.SQUARE_ENVIRONMENT || 'sandbox'}`);
+    
+    const requiredSquareConfig = ['SQUARE_ACCESS_TOKEN', 'SQUARE_APPLICATION_ID', 'SQUARE_LOCATION_ID'];
+    const missingConfig = requiredSquareConfig.filter(key => !process.env[key]);
+    
+    if (missingConfig.length > 0) {
+      console.warn('⚠️  Warning: Missing Square credentials:', missingConfig.join(', '));
+    } else {
+      console.log('✓ Square credentials configured');
+    }
+  });
+}
+
+// Export the Express app for Vercel serverless deployment
+module.exports = app;
