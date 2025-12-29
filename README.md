@@ -142,11 +142,58 @@ Processes a payment through Square.
 ### GET `/api/health`
 Health check endpoint to verify server and Square configuration status.
 
+## Deploying to Vercel
+
+This application is configured for easy deployment on Vercel:
+
+### Quick Deploy
+
+1. **Install Vercel CLI** (optional):
+   ```bash
+   npm install -g vercel
+   ```
+
+2. **Deploy from GitHub**:
+   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
+   - Click "New Project"
+   - Import your GitHub repository
+   - Configure environment variables (see below)
+   - Click "Deploy"
+
+3. **Deploy from CLI**:
+   ```bash
+   vercel
+   ```
+
+### Environment Variables on Vercel
+
+Add these environment variables in your Vercel project settings:
+
+```
+SQUARE_ACCESS_TOKEN=your_square_access_token
+SQUARE_APPLICATION_ID=your_square_application_id
+SQUARE_ENVIRONMENT=sandbox
+SQUARE_LOCATION_ID=your_square_location_id
+```
+
+**Important Notes:**
+- Use **sandbox** credentials for testing
+- Use **production** credentials for live deployment
+- Environment variables are set in: Project Settings → Environment Variables
+- Redeploy after adding/changing environment variables
+
+### Vercel Configuration
+
+The application includes a `vercel.json` file that:
+- Routes `/api/*` requests to the Express server
+- Serves static files from the `/public` directory
+- Configures the Node.js runtime for serverless deployment
+
 ## Going to Production
 
 To use this in production:
 
-1. Update `.env` to use production credentials:
+1. Update environment variables to use production credentials:
    ```env
    SQUARE_ENVIRONMENT=production
    SQUARE_ACCESS_TOKEN=your_production_access_token
@@ -210,18 +257,32 @@ See [Square Payment Form documentation](https://developer.squareup.com/docs/web-
 ## Troubleshooting
 
 ### "Square credentials not configured" warning
-- Make sure your `.env` file exists and contains valid credentials
-- Restart the server after updating `.env`
+- Make sure your `.env` file exists and contains valid credentials (local development)
+- For Vercel: Check environment variables in Project Settings → Environment Variables
+- Restart the server after updating `.env` (local) or redeploy (Vercel)
 
 ### Payment form doesn't load
-- Check that you've updated `SQUARE_APPLICATION_ID` in `app.js`
+- Check that you've configured `SQUARE_APPLICATION_ID` environment variable
 - Verify your application ID matches your environment (sandbox/production)
 - Check browser console for errors
+- Ensure Square SDK script is loading (check Network tab in browser DevTools)
 
 ### Payment fails
 - Verify you're using valid test card numbers in sandbox
 - Check that your location ID matches your access token
 - Review server logs for detailed error messages
+- For Vercel: Check Function Logs in the Vercel dashboard
+
+### Vercel deployment issues
+- **Build fails**: Check that all dependencies are in `package.json`
+- **API routes return 404**: Verify `vercel.json` is present and properly configured
+- **Environment variables not working**: Ensure variables are set in Vercel dashboard and you've redeployed
+- **Function timeout**: Check Vercel Function Logs for errors; consider optimizing slow operations
+
+### 500 Internal Server Error on Vercel
+- Check Vercel Function Logs for detailed error messages
+- Verify all environment variables are correctly set
+- Ensure Square credentials match the environment (sandbox vs production)
 
 ## License
 
