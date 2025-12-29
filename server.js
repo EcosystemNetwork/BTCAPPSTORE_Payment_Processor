@@ -182,6 +182,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+module.exports = app;
+
 // Start server (for local development)
 if (require.main === module) {
   app.listen(PORT, () => {
@@ -198,6 +200,3 @@ if (require.main === module) {
     }
   });
 }
-
-// Export the Express app for Vercel serverless deployment
-module.exports = app;
