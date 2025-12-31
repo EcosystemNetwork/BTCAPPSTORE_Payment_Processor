@@ -12,17 +12,18 @@ const MAX_CARD_INIT_ATTEMPTS = 3;
 
 // Initialize the app
 async function init() {
+    // Load config and products first
+    await loadConfig();
+    await loadProducts();
+    setupEventListeners();
+    updateCartCount();
+    
     // Check if Square SDK loaded
     if (typeof Square === 'undefined') {
         console.error('Square SDK failed to load');
         showError('Payment system is currently unavailable. Please try again later.');
         return;
     }
-    
-    await loadConfig();
-    await loadProducts();
-    setupEventListeners();
-    updateCartCount();
     
     // Initialize Square Payment Form
     if (config.squareConfigured && typeof Square !== 'undefined') {
@@ -195,21 +196,9 @@ async function showCheckout() {
         } else {
             showError('Unable to initialize payment form. Please refresh the page and try again.');
         }
-    } else if (card) {
-        // Card already exists, just make sure it's attached
-        try {
-            await card.attach('#card-container');
-        } catch (error) {
-            // If attach fails, try to reinitialize once
-            console.error('Error reattaching card:', error);
-            if (cardInitAttempts < MAX_CARD_INIT_ATTEMPTS) {
-                card = null;
-                await initializeCard();
-            } else {
-                showError('Unable to initialize payment form. Please refresh the page and try again.');
-            }
-        }
     }
+    // Note: If card already exists, we don't need to re-attach it
+    // Square card instances remain attached once initialized
 }
 
 function showSuccess(orderId, receiptUrl) {
@@ -257,7 +246,21 @@ function hideAllSections() {
 async function initializeCard() {
     try {
         cardInitAttempts++;
-        card = await squarePayments.card();
+        card = await squarePayments.card({
+            style: {
+                input: {
+                    fontSize: '16px',
+                },
+                'input::placeholder': {
+                    color: '#888'
+                },
+                '.message-text': {
+                    color: '#c62828'
+                }
+            },
+            // Disable postal code to show only essential card fields
+            postalCode: false
+        });
         await card.attach('#card-container');
     } catch (error) {
         console.error('Error initializing card:', error);
