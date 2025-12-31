@@ -36,42 +36,42 @@ const products = [
     name: 'Mountain Sunset',
     description: 'Beautiful sunset over mountain peaks',
     price: 2999, // Price in cents
-    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
+    image: '/tiny/tiny1.webp',
   },
   {
     id: 'photo-2',
     name: 'Ocean Waves',
     description: 'Serene ocean waves at dawn',
     price: 3499,
-    image: 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=400',
+    image: '/tiny/tiny2.webp',
   },
   {
     id: 'photo-3',
     name: 'Forest Path',
     description: 'Mystical forest path in autumn',
     price: 2499,
-    image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400',
+    image: '/tiny/tiny3.webp',
   },
   {
     id: 'photo-4',
     name: 'City Lights',
     description: 'Urban cityscape at night',
     price: 3999,
-    image: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=400',
+    image: '/tiny/tiny4.webp',
   },
   {
     id: 'photo-5',
     name: 'Desert Dunes',
     description: 'Golden sand dunes at sunset',
     price: 2799,
-    image: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=400',
+    image: '/tiny/tiny5.webp',
   },
   {
     id: 'photo-6',
     name: 'Northern Lights',
     description: 'Aurora borealis over snowy landscape',
     price: 4999,
-    image: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=400',
+    image: '/tiny/tiny6.webp',
   },
 ];
 
