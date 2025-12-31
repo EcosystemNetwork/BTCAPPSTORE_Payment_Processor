@@ -1,6 +1,9 @@
 // Configuration
 const API_BASE_URL = window.location.origin;
 
+// Error messages
+const ERROR_PAYMENT_INIT_FAILED = 'Payment form initialization failed. Please check your Square configuration.';
+
 // State management
 let cart = [];
 let products = [];
@@ -37,7 +40,7 @@ async function init() {
             await initializeCard();
         } catch (error) {
             console.error('Error initializing Square:', error);
-            showError('Payment form initialization failed. Please check your Square configuration.');
+            showError(ERROR_PAYMENT_INIT_FAILED);
         }
     }
 }
@@ -265,7 +268,7 @@ async function initializeCard() {
         await card.attach('#card-container');
     } catch (error) {
         console.error('Error initializing card:', error);
-        showError('Payment form initialization failed. Please check your Square configuration.');
+        showError(ERROR_PAYMENT_INIT_FAILED);
     }
 }
 
