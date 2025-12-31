@@ -37,6 +37,7 @@ async function init() {
             await initializeCard();
         } catch (error) {
             console.error('Error initializing Square:', error);
+            showError('Payment form initialization failed. Please check your Square configuration.');
         }
     }
 }
