@@ -261,9 +261,7 @@ async function initializeCard() {
                 '.message-text': {
                     color: '#c62828'
                 }
-            },
-            // Disable postal code to show only essential card fields
-            postalCode: false
+            }
         });
         await card.attach('#card-container');
     } catch (error) {
